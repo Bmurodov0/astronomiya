@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Время и календари</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;600&display=swap">
+<style>
+:root{--bg:#04050d;--fg:#eef1ff;--mut:#98a2d3;--a:#6ee7ff;--b:#a78bfa;--c:#fcd34d;--card:rgba(255,255,255,.05);--bd:rgba(255,255,255,.13);color-scheme:dark;box-sizing:border-box;--hf:"Unbounded","Segoe UI",system-ui,sans-serif}
+*{box-sizing:inherit;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+#sky{position:fixed;inset:0;z-index:0}
+.neb{position:fixed;z-index:0;border-radius:50%;filter:blur(90px);opacity:.35;animation:fl 18s ease-in-out infinite alternate}
+.n1{width:50vmax;height:50vmax;left:-15vmax;top:-10vmax;background:#5b3cc4}
+.n2{width:45vmax;height:45vmax;right:-12vmax;bottom:-12vmax;background:#0e7fa8;animation-delay:-8s}
+@keyframes fl{to{transform:translate(8vmax,5vmax) scale(1.2)}}
+#spot{position:fixed;z-index:6;width:420px;height:420px;margin:-210px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(110,231,255,.12),transparent 65%);left:0;top:0}
+.slide{position:fixed;inset:0;z-index:1;--x:50vw;--y:100vh;padding:78px max(22px,calc((100vw - 1100px)/2)) 96px;display:flex;flex-direction:column;justify-content:center;overflow-y:auto;clip-path:circle(0 at var(--x) var(--y));visibility:hidden;pointer-events:none}
+.slide.on{clip-path:circle(160% at var(--x) var(--y));transition:clip-path 1.15s cubic-bezier(.7,0,.2,1);z-index:3;visibility:visible;pointer-events:auto}
+.slide.out{clip-path:circle(160% at var(--x) var(--y));z-index:2;visibility:visible}
+[data-r]{opacity:0;transform:translateY(34px);filter:blur(8px)}
+.on [data-r]{opacity:1;transform:none;filter:none;transition:.9s cubic-bezier(.2,.8,.2,1);transition-delay:calc(.5s + var(--i)*.09s)}
+.tag{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;padding:7px 16px;border:1px solid var(--bd);border-radius:99px;background:var(--card);color:var(--a);font:600 .75rem var(--hf);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+.tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 12px var(--a);animation:pl 1.6s infinite}
+@keyframes pl{50%{opacity:.25}}
+h2{font:800 clamp(1.7rem,4.6vw,3.1rem)/1.1 var(--hf);margin-bottom:10px;background:linear-gradient(90deg,#fff,var(--a) 60%,var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--mut);font-size:clamp(1rem,2vw,1.2rem);max-width:680px;line-height:1.55;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}
+.card{position:relative;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:18px 20px;backdrop-filter:blur(10px);transition:border-color .3s,box-shadow .3s}
+.card:hover{border-color:var(--a);box-shadow:0 0 34px rgba(110,231,255,.22)}
+.card b{display:block;font:600 .95rem var(--hf);color:var(--c);margin-bottom:6px}
+.card span{color:var(--mut);font-size:.95rem;line-height:1.5}
+.num{display:block;font:800 2rem var(--hf);color:var(--a);text-shadow:0 0 22px rgba(110,231,255,.5);margin-bottom:2px}
+.row{display:flex;gap:30px;align-items:center;flex-wrap:wrap}.row>.l{flex:1 1 360px}
+/* home */
+.astro{position:absolute;right:-6vw;top:50%;width:min(78vw,640px);transform:translateY(-50%);opacity:.5;pointer-events:none}
+.astro g{transform-box:fill-box;transform-origin:center}
+.r1{animation:sp 60s linear infinite}.r2{animation:sp 24s linear infinite reverse}.r3{animation:sp 32s linear infinite}.r4{animation:sp 40s linear infinite reverse}
+@keyframes sp{to{transform:rotate(360deg)}}
+.mini{font:600 .8rem var(--hf);letter-spacing:.3em;color:var(--mut);text-transform:uppercase;margin-bottom:10px}
+h1{font:800 clamp(2.4rem,9vw,6rem)/1 var(--hf);perspective:700px;position:relative}
+h1 .ln{display:block}.l2{color:var(--a);animation:hue 8s linear infinite;text-shadow:0 0 40px rgba(110,231,255,.45)}
+@keyframes hue{50%{filter:hue-rotate(70deg)}}
+.ch{display:inline-block;opacity:0}
+.on .ch{animation:ch 1s cubic-bezier(.2,.9,.2,1) forwards;animation-delay:calc(.55s + var(--k)*.05s)}
+@keyframes ch{from{opacity:0;transform:translateY(70px) rotateX(-90deg);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:30px;position:relative}
+.tile{position:relative;overflow:hidden;cursor:pointer;text-align:left;color:inherit;font:inherit;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:20px;backdrop-filter:blur(10px);transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .15s,border-color .3s}
+.on .tile{animation:up .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(1s + var(--i)*.12s)}
+@keyframes up{from{opacity:0;translate:0 50px}}
+.tile::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(110,231,255,.22),transparent 60%);opacity:0;transition:.3s}
+.tile:hover{border-color:var(--a)}.tile:hover::before{opacity:1}
+.tile i{font:800 2.4rem var(--hf);font-style:normal;color:transparent;-webkit-text-stroke:1px var(--a);display:block;margin-bottom:10px}
+.tile b{font:600 1rem/1.3 var(--hf);display:block;margin-bottom:6px;position:relative}
+.tile span{color:var(--mut);font-size:.9rem;position:relative}
+.tile em{position:absolute;right:18px;top:18px;font-style:normal;color:var(--a);transition:.3s;font-size:1.4rem}
+.tile:hover em{transform:translate(4px,-4px)}
+/* orbit */
+.orbit{position:relative;width:300px;height:300px;flex:0 0 300px;margin:auto}
+.sun{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff9d0,#ffb300 55%,#ff6a00);box-shadow:0 0 60px 14px rgba(255,170,0,.55);animation:pu 3s ease-in-out infinite}
+@keyframes pu{50%{transform:scale(1.08)}}
+.ring{position:absolute;inset:18px;border:1px dashed rgba(255,255,255,.25);border-radius:50%;animation:sp 14s linear infinite}
+.earth{position:absolute;left:50%;top:-11px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#a6efff,#1565c0 70%);box-shadow:0 0 18px #4aa8ff;animation:sp 14s linear infinite reverse}
+.mr{position:absolute;inset:-26px;border:1px dotted rgba(255,255,255,.3);border-radius:50%;animation:sp 2.4s linear infinite}
+.moon{position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#e5e7f5;box-shadow:0 0 8px #fff}
+/* clock */
+.face{position:relative;width:240px;height:240px;border-radius:50%;border:2px solid var(--bd);margin:auto;flex:0 0 240px;background:radial-gradient(circle,rgba(110,231,255,.12),transparent 70%);box-shadow:0 0 60px rgba(110,231,255,.2),inset 0 0 40px rgba(167,139,250,.15)}
+.tk{position:absolute;left:50%;top:5px;width:2px;height:8px;margin-left:-1px;background:var(--mut);transform-origin:50% 114px}
+.tk.f{height:14px;width:3px;background:var(--c)}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:4px}
+#hh{width:6px;height:60px;margin-left:-3px;background:var(--a);box-shadow:0 0 12px var(--a)}#hm{width:4px;height:88px;margin-left:-2px;background:#fff}#hs{width:2px;height:100px;margin-left:-1px;background:var(--c);box-shadow:0 0 10px var(--c)}
+.pin{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--c)}
+.clocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-bottom:6px}
+.clk{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px;text-align:center}
+.clk small{display:block;color:var(--mut);font-size:.78rem}.clk u{text-decoration:none;font:600 1.15rem var(--hf);color:var(--a);font-variant-numeric:tabular-nums}
+/* moon + timeline */
+.mo{position:relative;width:96px;height:96px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 35% 30%,#fff,#c9cde6 60%,#8e94b8);box-shadow:0 0 40px rgba(255,255,255,.35);flex:0 0 96px}
+.mo::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:#070913;animation:ph 8s ease-in-out infinite alternate}
+@keyframes ph{from{transform:translateX(-102%)}to{transform:translateX(102%)}}
+.tl{position:relative;padding-left:26px;flex:1 1 320px}
+.tl::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:2px;background:linear-gradient(var(--a),var(--b));transform:scaleY(0);transform-origin:top;box-shadow:0 0 12px var(--a)}
+.on .tl::before{transform:none;transition:transform 2s ease .8s}
+.tl div{position:relative;margin-bottom:14px;color:var(--mut);font-size:.98rem;line-height:1.45}
+.tl div::before{content:"";position:absolute;left:-31px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--c);box-shadow:0 0 12px var(--c)}
+.tl b{color:var(--fg);font-family:var(--hf);font-weight:600;font-size:.9rem}
+/* year ring */
+.yr{position:relative;width:250px;height:250px;flex:0 0 250px;margin:auto}
+.yr svg{width:100%;height:100%}
+.yr circle.arc{fill:none;stroke-width:10;stroke:var(--a);stroke-dasharray:0 1461;transition:stroke-dasharray 1.2s ease;transition-delay:calc(.8s + var(--j)*.5s);filter:drop-shadow(0 0 5px currentColor)}
+.on .yr circle.arc{stroke-dasharray:358 1461}
+.yr circle.g{stroke:var(--c)}
+.yr .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--mut);font-size:.82rem}
+.yr .in .num{font-size:2.3rem}
+.leap{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.leap input{width:130px;padding:11px 14px;font:600 1.1rem var(--hf);color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:14px;outline:none}
+.leap input:focus{border-color:var(--a);box-shadow:0 0 20px rgba(110,231,255,.3)}
+#lr{font-weight:600;color:var(--c)}
+.big{font:800 clamp(2rem,7vw,4.6rem)/1.1 var(--hf);background:linear-gradient(90deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200%;animation:bgm 5s linear infinite}
+@keyframes bgm{to{background-position:200% 0}}
+.btn{margin-top:26px;align-self:flex-start;padding:14px 26px;border-radius:99px;border:1px solid var(--a);background:rgba(110,231,255,.1);color:var(--fg);font:600 .85rem var(--hf);cursor:pointer;transition:.3s}
+.btn:hover{background:var(--a);color:#04121a;box-shadow:0 0 40px rgba(110,231,255,.6)}
+#brand{position:fixed;z-index:5;left:max(20px,calc((100vw - 1100px)/2));top:calc(18px + env(safe-area-inset-top,0px));background:none;border:0;color:var(--mut);font:600 .72rem var(--hf);letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+#brand:hover{color:var(--a)}
+nav{position:fixed;z-index:5;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;align-items:center;gap:16px}
+nav button{width:46px;height:46px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--fg);font-size:1.5rem;line-height:1;cursor:pointer;backdrop-filter:blur(10px);transition:.3s}
+nav button:hover{border-color:var(--a);box-shadow:0 0 22px rgba(110,231,255,.4)}
+.dots{display:flex;gap:9px}.dots i{width:10px;height:10px;border-radius:6px;background:var(--bd);cursor:pointer;transition:.4s}
+.dots i.on{background:var(--a);width:34px;box-shadow:0 0 14px var(--a)}
+@media(max-width:600px){.orbit{width:230px;height:230px;flex-basis:230px}.astro{opacity:.3}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}.ch{opacity:1}}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas><div class="neb n1"></div><div class="neb n2"></div><div id="spot"></div>
+<button id="brand">Время · Календари</button>
+
+<section class="slide on">
+  <svg class="astro" viewBox="-200 -200 400 400" fill="none">
+    <g class="r1"><circle r="190" stroke="#6ee7ff" stroke-dasharray="1 9"/><circle r="176" stroke="#ffffff33"/></g>
+    <g class="r2"><ellipse rx="150" ry="52" stroke="#a78bfa"/></g>
+    <g class="r3"><ellipse rx="150" ry="52" stroke="#6ee7ff" transform="rotate(60)"/></g>
+    <g class="r4"><ellipse rx="150" ry="52" stroke="#fcd34d" transform="rotate(-60)"/></g>
+    <circle r="16" fill="#fcd34d" opacity=".9"/><circle r="30" stroke="#fcd34d55"/>
+  </svg>
+  <div class="mini" data-r>Астрономия</div>
+  <h1 id="ttl"><span class="ln">Время</span><span class="ln l2">и календари</span></h1>
+  <p class="lead" data-r style="margin-top:18px">Выберите раздел, чтобы перейти к нему.</p>
+  <div class="tiles">
+    <button class="tile" style="--i:0" data-go="1"><em>↗</em><i>01</i><b>Основы измерения времени</b><span>Сутки, месяц, год</span></button>
+    <button class="tile" style="--i:1" data-go="2"><em>↗</em><i>02</i><b>Часы и системы времени</b><span>Пояса, UTC, атомная секунда</span></button>
+    <button class="tile" style="--i:2" data-go="3"><em>↗</em><i>03</i><b>Календари мира</b><span>Лунный, солнечный, лунно-солнечный</span></button>
+    <button class="tile" style="--i:3" data-go="4"><em>↗</em><i>04</i><b>Современный календарь</b><span>Високосные годы и точность</span></button>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag" data-r>Раздел 01</span>
+  <h2 data-r>Основы измерения времени</h2>
+  <div class="row">
+    <div class="l">
+      <p class="lead" data-r>Время измеряют по повторяющимся небесным явлениям: вращению Земли, обращению Луны и движению Земли вокруг Солнца.</p>
+      <div class="grid">
+        <div class="card" data-r><span class="num"><em data-count="24" data-d="0" data-suf=" ч" style="font-style:normal">0</em></span><b>Сутки</b><span>Оборот Земли вокруг оси. Звёздные сутки короче: 23 ч 56 мин 4 с.</span></div>
+        <div class="card" data-r><span class="num"><em data-count="29.53" data-d="2" style="font-style:normal">0</em></span><b>Месяц</b><span>Синодический месяц: полный цикл лунных фаз, в сутках.</span></div>
+        <div class="card" data-r><span class="num"><em data-count="365.2422" data-d="4" style="font-style:normal">0</em></span><b>Год</b><span>Тропический год: оборот Земли вокруг Солнца, в сутках.</span></div>
+      </div>
+    </div>
+    <div class="orbit" data-r><div class="ring"><div class="earth"><div class="mr"><div class="moon"></div></div></div></div><div class="sun"></div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag" data-r>Раздел 02</span>
+  <h2 data-r>Часы и системы времени</h2>
+  <div class="row">
+    <div class="l">
+      <div class="clocks" id="clocks" data-r></div>
+      <div class="grid">
+        <div class="card" data-r><b>Поясное время</b><span>Земля делится на 24 пояса по 15° долготы, разница между соседними — час.</span></div>
+        <div class="card" data-r><b>UTC</b><span>Всемирное координированное время, основа гражданского времени.</span></div>
+        <div class="card" data-r><b>Атомная секунда</b><span>9 192 631 770 колебаний атома цезия-133, определение с 1967 года.</span></div>
+      </div>
+    </div>
+    <div class="face" id="face" data-r><div class="hand" id="hh"></div><div class="hand" id="hm"></div><div class="hand" id="hs"></div><div class="pin"></div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag" data-r>Раздел 03</span>
+  <h2 data-r>Календари мира</h2>
+  <div class="grid">
+    <div class="card" data-r><b>Лунный</b><span>Основан на фазах Луны. Исламский календарь: год около 354 дней.</span></div>
+    <div class="card" data-r><b>Солнечный</b><span>Привязан к временам года: юлианский и григорианский.</span></div>
+    <div class="card" data-r><b>Лунно-солнечный</b><span>Совмещает оба цикла: еврейский и китайский календари.</span></div>
+  </div>
+  <div class="row" style="margin-top:22px">
+    <div class="mo" data-r></div>
+    <div class="tl" data-r>
+      <div style="--i:0"><b>около 3000 до н. э.</b> Египтяне: 365 дней, год по восходу Сириуса</div>
+      <div><b>45 до н. э.</b> Юлий Цезарь вводит юлианский календарь, год 365,25 дня</div>
+      <div><b>1582</b> Папа Григорий XIII вводит григорианский календарь</div>
+      <div><b>1918</b> Россия переходит на новый стиль: 31 января сменяется 14 февраля</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag" data-r>Раздел 04</span>
+  <h2 data-r>Современный календарь</h2>
+  <div class="row">
+    <div class="l">
+      <p class="lead" data-r>Календарный год в 365 дней короче тропического почти на четверть суток, поэтому раз в четыре года добавляют 29 февраля.</p>
+      <div class="grid">
+        <div class="card" data-r><b>Правило</b><span>Год делится на 4 — високосный; века только если делятся на 400.</span></div>
+        <div class="card" data-r><b>Точность</b><span>Ошибка в одни сутки накапливается примерно за 3000 лет.</span></div>
+        <div class="card" data-r><b>Високосная секунда</b><span>Из-за замедления вращения Земли иногда добавляют лишнюю секунду.</span></div>
+      </div>
+      <div class="leap" data-r><span>Проверьте год</span><input id="y" type="number" value="2028"><span id="lr"></span></div>
+    </div>
+    <div class="yr" data-r>
+      <svg viewBox="0 0 200 200"><g transform="rotate(-90 100 100)">
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#ffffff14" stroke-width="10"/>
+        <circle class="arc" style="--j:0;stroke-dashoffset:-2" cx="100" cy="100" r="80" pathLength="1461"/>
+        <circle class="arc" style="--j:1;stroke-dashoffset:-367" cx="100" cy="100" r="80" pathLength="1461"/>
+        <circle class="arc" style="--j:2;stroke-dashoffset:-732" cx="100" cy="100" r="80" pathLength="1461"/>
+        <circle class="arc g" style="--j:3;stroke-dashoffset:-1097" cx="100" cy="100" r="80" pathLength="1461"/>
+      </g></svg>
+      <div class="in"><span class="num"><em data-count="1461" data-d="0" style="font-style:normal">0</em></span>день в цикле<br>из четырёх лет</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag" data-r>Финал</span>
+  <div class="big" data-r>Спасибо за внимание</div>
+  <p class="lead" data-r style="margin-top:14px">Время и календарь — результат наблюдений за небом и договорённостей людей.</p>
+  <button class="btn" data-r data-go="0">К содержанию</button>
+</section>
+
+<nav><button id="pv" aria-label="Назад">‹</button><div class="dots" id="dots"></div><button id="nx" aria-label="Вперёд">›</button></nav>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var cv=$('sky'),c=cv.getContext('2d'),W,H,St=[],warp=0,mx=0,my=0;
+function R(a,b){return a+Math.random()*(b-a)}
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;St=[];for(var i=0;i<Math.min(450,W*H/3500);i++)St.push({x:R(-1,1),y:R(-1,1),z:Math.random()})}
+addEventListener('resize',rs);rs();
+var spot=$('spot');
+addEventListener('mousemove',function(e){mx=e.clientX/W-.5;my=e.clientY/H-.5;spot.style.transform='translate('+e.clientX+'px,'+e.clientY+'px)'});
+// split title
+document.querySelectorAll('#ttl .ln').forEach(function(l,n){var t=l.textContent,k=n*6;l.textContent='';t.split('').forEach(function(ch){var s=document.createElement('span');s.className='ch';s.style.setProperty('--k',k++);s.innerHTML=ch===' '?'&nbsp;':ch;l.appendChild(s)})});
+// clock
+var face=$('face');for(var i=0;i<60;i++){var t=document.createElement('div');t.className='tk'+(i%5?'':' f');t.style.transform='rotate('+i*6+'deg)';face.appendChild(t)}
+var Z=[['Ташкент','Asia/Tashkent'],['Москва','Europe/Moscow'],['Лондон (UTC)','UTC'],['Токио','Asia/Tokyo']],cb=$('clocks');
+Z.forEach(function(z){var d=document.createElement('div');d.className='clk';d.innerHTML='<small>'+z[0]+'</small><u></u>';cb.appendChild(d)});
+var ls=-1;
+function frame(){
+  c.clearRect(0,0,W,H);var sp=.0007+warp;warp*=.95;var X=W/2+mx*30,Y=H/2+my*30;c.lineCap='round';c.strokeStyle='#cfe8ff';
+  for(var i=0;i<St.length;i++){var s=St[i],z0=s.z;s.z-=sp;if(s.z<.02){s.x=R(-1,1);s.y=R(-1,1);s.z=1;z0=1}
+    var k0=W*.25/z0,k1=W*.25/s.z;c.globalAlpha=Math.min(1,(1-s.z)*1.3+.12);c.lineWidth=(1-s.z)*2.2+.4;
+    c.beginPath();c.moveTo(X+s.x*k0,Y+s.y*k0);c.lineTo(X+s.x*k1,Y+s.y*k1);c.stroke()}
+  var n=new Date(),ms=n.getMilliseconds(),s2=n.getSeconds()+ms/1000,m=n.getMinutes()+s2/60,h=n.getHours()%12+m/60;
+  $('hs').style.transform='rotate('+s2*6+'deg)';$('hm').style.transform='rotate('+m*6+'deg)';$('hh').style.transform='rotate('+h*30+'deg)';
+  if(n.getSeconds()!==ls){ls=n.getSeconds();[].forEach.call(cb.children,function(d,i){d.querySelector('u').textContent=n.toLocaleTimeString('ru-RU',{timeZone:Z[i][1],hour:'2-digit',minute:'2-digit',second:'2-digit'})})}
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+// slides
+var sl=document.querySelectorAll('.slide'),dots=$('dots'),cur=0,tm;
+var names=['Содержание','Раздел 1','Раздел 2','Раздел 3','Раздел 4','Финал'];
+sl.forEach(function(s,i){var d=document.createElement('i');d.title=names[i];d.onclick=function(){go(i)};dots.appendChild(d);
+  s.querySelectorAll('[data-r]').forEach(function(e,k){e.style.setProperty('--i',k)})});
+function count(s){s.querySelectorAll('[data-count]').forEach(function(e){var T=+e.dataset.count,d=+e.dataset.d,suf=e.dataset.suf||'',t0=performance.now()+700;
+  (function st(t){var p=Math.max(0,Math.min(1,(t-t0)/1700)),v=T*(1-Math.pow(1-p,3));e.textContent=v.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d})+suf;if(p<1)requestAnimationFrame(st)})(performance.now())})}
+function go(i,x,y){
+  i=Math.max(0,Math.min(sl.length-1,i));if(i===cur)return;
+  var nw=sl[i],old=sl[cur];
+  nw.style.setProperty('--x',(x==null?innerWidth/2:x)+'px');nw.style.setProperty('--y',(y==null?innerHeight:y)+'px');
+  sl.forEach(function(s){s.classList.remove('out')});
+  clearTimeout(tm);old.classList.remove('on');old.classList.add('out');
+  void nw.offsetWidth;nw.classList.add('on');nw.scrollTop=0;
+  warp=.04;cur=i;count(nw);
+  [].forEach.call(dots.children,function(d,k){d.classList.toggle('on',k===i)});
+  tm=setTimeout(function(){old.classList.remove('out')},1250)}
+document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(e){go(+b.dataset.go,e.clientX||innerWidth/2,e.clientY||innerHeight/2)})});
+document.querySelectorAll('.tile').forEach(function(t){t.addEventListener('mousemove',function(e){var r=t.getBoundingClientRect(),px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;t.style.setProperty('--mx',px*100+'%');t.style.setProperty('--my',py*100+'%');t.style.setProperty('--ry',(px-.5)*12+'deg');t.style.setProperty('--rx',(.5-py)*12+'deg')});t.addEventListener('mouseleave',function(){t.style.setProperty('--rx','0deg');t.style.setProperty('--ry','0deg')})});
+$('pv').onclick=function(){go(cur-1)};$('nx').onclick=function(){go(cur+1)};$('brand').onclick=function(){go(0,40,30)};
+addEventListener('keydown',function(e){if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')go(cur+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);if(e.key==='Home'||e.key==='Escape')go(0)});
+var tx=0;addEventListener('touchstart',function(e){tx=e.touches[0].clientX});
+addEventListener('touchend',function(e){var d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>70)go(cur+(d<0?1:-1))});
+dots.children[0].classList.add('on');
+// leap
+var yi=$('y'),lr=$('lr');function lp(){var y=+yi.value;if(!y){lr.textContent='';return}lr.textContent=((y%4===0&&y%100!==0)||y%400===0)?'високосный, 366 дней':'обычный, 365 дней'}
+yi.oninput=lp;lp();
+})();
+</script>
+</body>
+</html>
